@@ -5,23 +5,27 @@ from functools import wraps
 from markupsafe import escape
 import secrets
 
+# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# Initialize SocketIO without async_mode
+# Configure SocketIO
 socketio = SocketIO(
     app,
     cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*'),
-    logger=True,
-    engineio_logger=True
+    logger=bool(os.environ.get('DEBUG')),
+    engineio_logger=bool(os.environ.get('DEBUG')),
+    async_mode='eventlet'
 )
 
+# Authentication decorator
 def authenticated_only(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
         return f(*args, **kwargs) if session.get('username') else False
     return wrapped
 
+# Routes
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -42,6 +46,7 @@ def logout():
     session.clear()
     return redirect('/')
 
+# SocketIO handlers
 @socketio.on('connect')
 def handle_connect():
     if session.get('username'):
@@ -55,21 +60,18 @@ def handle_disconnect():
 @socketio.on('message')
 @authenticated_only
 def handle_message(msg):
-    emit('message', {'username': session['username'], 'msg': escape(msg)}, broadcast=True)
+    emit('message', {
+        'username': session['username'],
+        'msg': escape(msg)
+    }, broadcast=True)
 
+# Start application (only for development)
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    debug = os.environ.get('DEBUG', 'false').lower() == 'true'
-    
-    if debug:
-        socketio.run(app, host='0.0.0.0', port=port, debug=debug, allow_unsafe_werkzeug=True)
-    else:
-        # Production configuration
-        import eventlet
-        eventlet.monkey_patch()
-        socketio.run(app,
-                    host='0.0.0.0',
-                    port=port,
-                    debug=False,
-                    log_output=True,
-                    use_reloader=False)
+    debug_mode = os.environ.get('DEBUG', 'false').lower() == 'true'
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000)),
+        debug=debug_mode,
+        allow_unsafe_werkzeug=debug_mode
+    )
