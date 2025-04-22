@@ -1,39 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Anonymous Chat</title>
+    <title>Chat</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
-<body class="dark-mode">
-    <div class="theme-toggle">
-        <button id="theme-toggle-btn" aria-label="Toggle theme">
-            <i class="fas fa-moon"></i>
-        </button>
-    </div>
+<body>
     <div class="entry-container">
         <div class="entry-box">
-            <h2>Join the Chat</h2>
+            <h2>Enter Chat</h2>
             <form method="post">
-                <input type="text" name="username" placeholder="Enter your nickname" required maxlength="20">
-                <button type="submit" class="join-btn"><i class="fas fa-sign-in-alt"></i> Join</button>
+                <input type="text" name="username" placeholder="Nickname" required maxlength="20">
+                <button type="submit" class="join-btn"><i class="fas fa-sign-in-alt"></i></button>
             </form>
         </div>
     </div>
-    <script>
-        const toggleBtn = document.getElementById('theme-toggle-btn');
-        const body = document.body;
-        const icon = toggleBtn.querySelector('i');
-        const setTheme = (theme) => {
-            body.className = theme;
-            icon.className = theme === 'light-mode' ? 'fas fa-sun' : 'fas fa-moon';
-            localStorage.setItem('theme', theme);
-        };
-        toggleBtn.addEventListener('click', () => {
-            setTheme(body.className === 'dark-mode' ? 'light-mode' : 'dark-mode');
-        });
-        const savedTheme = localStorage.getItem('theme') || 'dark-mode';
-        setTheme(savedTheme);
-    </script>
 </body>
 </html>
