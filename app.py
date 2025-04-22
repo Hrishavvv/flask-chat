@@ -5,27 +5,29 @@ from functools import wraps
 from markupsafe import escape
 import secrets
 
-# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.secret_key = secrets.token_hex(32)
 
-# Configure SocketIO
+app.config.update(
+    DEBUG=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
+
 socketio = SocketIO(
     app,
-    cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*'),
-    logger=bool(os.environ.get('DEBUG')),
-    engineio_logger=bool(os.environ.get('DEBUG')),
+    cors_allowed_origins="*",
+    logger=True,
+    engineio_logger=True,
     async_mode='eventlet'
 )
 
-# Authentication decorator
 def authenticated_only(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
         return f(*args, **kwargs) if session.get('username') else False
     return wrapped
 
-# Routes
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -46,7 +48,6 @@ def logout():
     session.clear()
     return redirect('/')
 
-# SocketIO handlers
 @socketio.on('connect')
 def handle_connect():
     if session.get('username'):
@@ -59,19 +60,19 @@ def handle_disconnect():
 
 @socketio.on('message')
 @authenticated_only
-def handle_message(msg):
+def handle_message(data):
+    msg = data.get('msg') if isinstance(data, dict) else data
+    color = data.get('color', '#007bff') if isinstance(data, dict) else '#007bff'
     emit('message', {
         'username': session['username'],
-        'msg': escape(msg)
+        'msg': escape(msg),
+        'color': color
     }, broadcast=True)
 
-# Start application (only for development)
 if __name__ == '__main__':
-    debug_mode = os.environ.get('DEBUG', 'false').lower() == 'true'
     socketio.run(
         app,
         host='0.0.0.0',
-        port=int(os.environ.get('PORT', 5000)),
-        debug=debug_mode,
-        allow_unsafe_werkzeug=debug_mode
+        port=5000,
+        debug=True
     )

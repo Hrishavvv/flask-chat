@@ -6,28 +6,33 @@
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
 </head>
 <body>
-    <div class="chatbox">
-        <h2>Anonymous Chat - {{ username }}</h2>
-        <div id="messages"></div>
-        <form id="form">
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Chat Room - {{ username }}</h2>
+            <a href="/logout" class="logout-btn">Exit Chat</a>
+        </div>
+        <div id="messages" class="chat-messages"></div>
+        <form id="form" class="chat-form">
             <input id="message" autocomplete="off" placeholder="Type your message..." maxlength="200" />
-            <button>Send</button>
+            <input type="color" id="color-picker" name="color" value="#007bff" title="Choose message color">
+            <button type="submit">Send</button>
         </form>
-        <a href="/logout" class="logout">[Exit Chat]</a>
     </div>
     <script>
         const socket = io();
         const form = document.getElementById('form');
         const input = document.getElementById('message');
         const messages = document.getElementById('messages');
+        const colorPicker = document.getElementById('color-picker');
 
         input.focus();
 
         form.addEventListener('submit', e => {
             e.preventDefault();
             const message = input.value.trim();
+            const color = colorPicker.value;
             if (message) {
-                socket.emit('message', message);
+                socket.emit('message', { msg: message, color: color });
                 input.value = '';
             }
         });
@@ -35,7 +40,13 @@
         socket.on('message', data => {
             const msgElement = document.createElement('div');
             msgElement.className = 'message';
-            msgElement.innerHTML = `<span class="username">${data.username}:</span> ${data.msg}`;
+            msgElement.style.backgroundColor = data.color + '15'; // Light background with opacity
+            msgElement.style.borderLeftColor = data.color;
+            msgElement.innerHTML = `
+                <span class="username">${data.username}</span>
+                <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                <p>${data.msg}</p>
+            `;
             messages.appendChild(msgElement);
             messages.scrollTop = messages.scrollHeight;
         });
