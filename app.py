@@ -1,19 +1,25 @@
+import os
 from flask import Flask, render_template, request, redirect, session
 from flask_socketio import SocketIO, emit
 from functools import wraps
-import os
 from markupsafe import escape
+import secrets
 
 app = Flask(__name__)
-app.secret_key = 'd3f4ult_s3cr3t_k3y_ch4ng3_m3!'  
-socketio = SocketIO(app, cors_allowed_origins="*")
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*'),
+    async_mode='gevent',
+    logger=False,
+    engineio_logger=False
+)
 
 def authenticated_only(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
-        if not session.get('username'):
-            return False
-        return f(*args, **kwargs)
+        return f(*args, **kwargs) if session.get('username') else False
     return wrapped
 
 @app.route('/', methods=['GET', 'POST'])
@@ -27,9 +33,7 @@ def index():
 
 @app.route('/chat')
 def chat():
-    if 'username' not in session:
-        return redirect('/')
-    return render_template('chat.html', username=session['username'])
+    return render_template('chat.html', username=session['username']) if 'username' in session else redirect('/')
 
 @app.route('/logout')
 def logout():
@@ -49,11 +53,12 @@ def handle_disconnect():
 @socketio.on('message')
 @authenticated_only
 def handle_message(msg):
-    username = session.get('username', 'anon')
-    emit('message', {
-        'username': username,
-        'msg': escape(msg)
-    }, broadcast=True)
+    emit('message', {'username': session['username'], 'msg': escape(msg)}, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000)),
+        debug=os.environ.get('DEBUG', 'false').lower() == 'true'
+    )
