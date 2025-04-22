@@ -3,19 +3,25 @@
 <head>
     <title>Chat Room - {{ username }}</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
 </head>
-<body>
+<body class="dark-mode">
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn" aria-label="Toggle theme">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
     <div class="chat-container">
         <div class="chat-header">
-            <h2>Chat Room - {{ username }}</h2>
-            <a href="/logout" class="logout-btn">Exit Chat</a>
+            <h2>{{ username }}'s Chat</h2>
+            <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
         </div>
         <div id="messages" class="chat-messages"></div>
         <form id="form" class="chat-form">
-            <input id="message" autocomplete="off" placeholder="Type your message..." maxlength="200" />
-            <input type="color" id="color-picker" name="color" value="#007bff" title="Choose message color">
-            <button type="submit">Send</button>
+            <input type="color" id="color-picker" name="color" value="#1877f2">
+            <input id="message" autocomplete="off" placeholder="Type a message..." maxlength="200">
+            <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
         </form>
     </div>
     <script>
@@ -24,9 +30,7 @@
         const input = document.getElementById('message');
         const messages = document.getElementById('messages');
         const colorPicker = document.getElementById('color-picker');
-
         input.focus();
-
         form.addEventListener('submit', e => {
             e.preventDefault();
             const message = input.value.trim();
@@ -36,21 +40,21 @@
                 input.value = '';
             }
         });
-
         socket.on('message', data => {
             const msgElement = document.createElement('div');
             msgElement.className = 'message';
-            msgElement.style.backgroundColor = data.color + '15'; // Light background with opacity
+            msgElement.style.backgroundColor = data.color + '15';
             msgElement.style.borderLeftColor = data.color;
             msgElement.innerHTML = `
-                <span class="username">${data.username}</span>
-                <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                <div class="message-header">
+                    <span class="username">${data.username}</span>
+                    <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                </div>
                 <p>${data.msg}</p>
             `;
             messages.appendChild(msgElement);
             messages.scrollTop = messages.scrollHeight;
         });
-
         socket.on('status', data => {
             const statusElement = document.createElement('div');
             statusElement.className = 'status';
@@ -58,6 +62,19 @@
             messages.appendChild(statusElement);
             messages.scrollTop = messages.scrollHeight;
         });
+        const toggleBtn = document.getElementById('theme-toggle-btn');
+        const body = document.body;
+        const icon = toggleBtn.querySelector('i');
+        const setTheme = (theme) => {
+            body.className = theme;
+            icon.className = theme === 'light-mode' ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', theme);
+        };
+        toggleBtn.addEventListener('click', () => {
+            setTheme(body.className === 'dark-mode' ? 'light-mode' : 'dark-mode');
+        });
+        const savedTheme = localStorage.getItem('theme') || 'dark-mode';
+        setTheme(savedTheme);
     </script>
 </body>
 </html>
