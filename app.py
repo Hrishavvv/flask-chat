@@ -8,10 +8,12 @@ import secrets
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# Remove async_mode completely - let SocketIO auto-detect
+# Initialize SocketIO without async_mode
 socketio = SocketIO(
     app,
-    cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*')
+    cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*'),
+    logger=True,
+    engineio_logger=True
 )
 
 def authenticated_only(f):
@@ -31,7 +33,9 @@ def index():
 
 @app.route('/chat')
 def chat():
-    return render_template('chat.html', username=session['username']) if 'username' in session else redirect('/')
+    if 'username' not in session:
+        return redirect('/')
+    return render_template('chat.html', username=session['username'])
 
 @app.route('/logout')
 def logout():
@@ -54,9 +58,18 @@ def handle_message(msg):
     emit('message', {'username': session['username'], 'msg': escape(msg)}, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(
-        app,
-        host='0.0.0.0',
-        port=int(os.environ.get('PORT', 5000)),
-        allow_unsafe_werkzeug=True
-    )
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('DEBUG', 'false').lower() == 'true'
+    
+    if debug:
+        socketio.run(app, host='0.0.0.0', port=port, debug=debug, allow_unsafe_werkzeug=True)
+    else:
+        # Production configuration
+        import eventlet
+        eventlet.monkey_patch()
+        socketio.run(app,
+                    host='0.0.0.0',
+                    port=port,
+                    debug=False,
+                    log_output=True,
+                    use_reloader=False)
