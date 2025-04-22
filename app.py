@@ -8,12 +8,10 @@ import secrets
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
+# Simplified SocketIO initialization without async_mode
 socketio = SocketIO(
     app,
-    cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*'),
-    async_mode='gevent',
-    logger=False,
-    engineio_logger=False
+    cors_allowed_origins=os.environ.get('ALLOWED_ORIGINS', '*')
 )
 
 def authenticated_only(f):
