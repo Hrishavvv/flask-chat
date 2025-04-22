@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room - {{ username }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="chatbox">
+        <h2>Anonymous Chat - {{ username }}</h2>
+        <div id="messages"></div>
+        <form id="form">
+            <input id="message" autocomplete="off" placeholder="Type your message..." maxlength="200" />
+            <button>Send</button>
+        </form>
+        <a href="/logout" class="logout">[Exit Chat]</a>
+    </div>
+    <script>
+        const socket = io();
+        const form = document.getElementById('form');
+        const input = document.getElementById('message');
+        const messages = document.getElementById('messages');
+
+        input.focus();
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const message = input.value.trim();
+            if (message) {
+                socket.emit('message', message);
+                input.value = '';
+            }
+        });
+
+        socket.on('message', data => {
+            const msgElement = document.createElement('div');
+            msgElement.className = 'message';
+            msgElement.innerHTML = `<span class="username">${data.username}:</span> ${data.msg}`;
+            messages.appendChild(msgElement);
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+        socket.on('status', data => {
+            const statusElement = document.createElement('div');
+            statusElement.className = 'status';
+            statusElement.textContent = data.msg;
+            messages.appendChild(statusElement);
+            messages.scrollTop = messages.scrollHeight;
+        });
+    </script>
+</body>
+</html>

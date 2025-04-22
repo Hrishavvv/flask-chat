@@ -1,0 +1,109 @@
+body {
+    background: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.box {
+    max-width: 800px;
+    margin: auto;
+    border: 1px solid #0f0;
+    padding: 20px;
+    background-color: #000;
+}
+
+.chatbox {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #000;
+    border: none;
+}
+
+h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #0f0;
+    padding-bottom: 10px;
+}
+
+input {
+    flex-grow: 1;
+    background: #111;
+    color: #0f0;
+    border: 1px solid #0f0;
+    padding: 10px;
+    font-family: monospace;
+    margin-right: 5px;
+}
+
+button {
+    background: #0f0;
+    color: #000;
+    border: none;
+    padding: 10px 15px;
+    font-family: monospace;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0c0;
+}
+
+#messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #0f0;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #111;
+}
+
+.message {
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.status {
+    color: #888;
+    font-style: italic;
+    margin-bottom: 8px;
+}
+
+.username {
+    color: #0f0;
+    font-weight: bold;
+}
+
+.logout {
+    display: inline-block;
+    margin-top: 10px;
+    color: #f00;
+    text-decoration: none;
+}
+
+.logout:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    .chatbox {
+        padding: 10px;
+    }
+    
+    input {
+        padding: 8px;
+    }
+    
+    button {
+        padding: 8px 12px;
+    }
+}
